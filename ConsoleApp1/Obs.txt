@@ -1,0 +1,107 @@
+Chat-Example01_SimpleChat
+	escreve uma simples pergunta e recebe uma resposta 
+Chat-Example02_SimpleChatStreaming
+    uma forma de apresentar o texto todo quebrado 
+Chat-Example03_FunctionCalling
+	dependendo da resposta utiliza apis internas para responder 
+[
+   {
+      "ParticipantName":null,
+      "Content":[
+         {
+            "Kind":{
+               
+            },
+            "Text":"What's the weather like today?",
+            "ImageUri":null,
+            "ImageBytes":null,
+            "ImageBytesMediaType":null,
+            "ImageDetail":null
+         }
+      ]
+   },
+   {
+      "ParticipantName":null,
+      "ToolCalls":[
+         {
+            "Kind":{
+               
+            },
+            "FunctionName":"GetCurrentLocation",
+            "FunctionArguments":"{}",
+            "Id":"call_w8xreklUNIRAixeBnIl0y1ln"
+         }
+      ],
+      "FunctionCall":null,
+      "Content":[
+         
+      ]
+   },
+   {
+      "ToolCallId":"call_w8xreklUNIRAixeBnIl0y1ln",
+      "Content":[
+         {
+            "Kind":{
+               
+            },
+            "Text":"San Francisco",
+            "ImageUri":null,
+            "ImageBytes":null,
+            "ImageBytesMediaType":null,
+            "ImageDetail":null
+         }
+      ]
+   },
+   {
+      "ParticipantName":null,
+      "ToolCalls":[
+         {
+            "Kind":{
+               
+            },
+            "FunctionName":"GetCurrentWeather",
+            "FunctionArguments":"{\"location\":\"San Francisco, CA\"}",
+            "Id":"call_r6DyGk77zNRYYRGihWVl9GWI"
+         }
+      ],
+      "FunctionCall":null,
+      "Content":[
+         
+      ]
+   },
+   {
+      "ToolCallId":"call_r6DyGk77zNRYYRGihWVl9GWI",
+      "Content":[
+         {
+            "Kind":{
+               
+            },
+            "Text":"31 celsius",
+            "ImageUri":null,
+            "ImageBytes":null,
+            "ImageBytesMediaType":null,
+            "ImageDetail":null
+         }
+      ]
+   },
+   {
+      "ParticipantName":null,
+      "ToolCalls":[
+         
+      ],
+      "FunctionCall":null,
+      "Content":[
+         {
+            "Kind":{
+               
+            },
+            "Text":"The current weather in San Francisco, CA is 31°C.",
+            "ImageUri":null,
+            "ImageBytes":null,
+            "ImageBytesMediaType":null,
+            "ImageDetail":null
+         }
+      ]
+   }
+]
+
