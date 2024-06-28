@@ -13,6 +13,24 @@ namespace Ola
     class TestClass
     {
 
+        static float CosineSimilarity(float[] vectorA, float[] vectorB)
+        {
+            float dotProduct = 0;
+            float magnitudeA = 0;
+            float magnitudeB = 0;
+
+            for (int i = 0; i < vectorA.Length; i++)
+            {
+                dotProduct += vectorA[i] * vectorB[i];
+                magnitudeA += vectorA[i] * vectorA[i];
+                magnitudeB += vectorB[i] * vectorB[i];
+            }
+
+            magnitudeA = (float)Math.Sqrt(magnitudeA);
+            magnitudeB = (float)Math.Sqrt(magnitudeB);
+
+            return dotProduct / (magnitudeA * magnitudeB);
+        }
         static string GetCurrentLocation()
         {
             // Call the location API here.
@@ -63,7 +81,8 @@ namespace Ola
                 "Chat-Generate-Embeddings",
                 "Chat-Generate-Images",
                 "Chat-Transcribe-Audio",
-                "Chat-Compose1"
+                "Chat-Compose1",
+                "Chat-SimpleChatProtocol"
             };
 
             Console.WriteLine("informe a opção de chat?");
@@ -224,14 +243,52 @@ namespace Ola
             }
             else if (capturado == "Chat-Generate-Embeddings")
             {
-                EmbeddingClient clientE = new(model: "text-embedding-3-small", Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+                EmbeddingClient clientE = new("text-embedding-3-small", Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
 
-                string description = "Best hotel in town if you like luxury hotels. They have an amazing infinity pool, a spa,"
-                    + " and a really helpful concierge. The location is perfect -- right downtown, close to all the tourist"
-                    + " attractions. We highly recommend this hotel.";
-                EmbeddingGenerationOptions optionsE = new() { Dimensions = 512 };
-                Embedding embedding = clientE.GenerateEmbedding(description, optionsE);
-                ReadOnlyMemory<float> vector = embedding.Vector;
+                var documents = new List<string>
+                {
+                    "O GPT-3 é um modelo de linguagem desenvolvido pela OpenAI.",
+                    "O aprendizado de máquina é uma subárea da inteligência artificial.",
+                    "A computação quântica tem o potencial de resolver problemas complexos.",
+                    "A biotecnologia está revolucionando a medicina moderna."
+                };
+
+                // Gerar embeddings para cada documento
+                var documentEmbeddings = new List<Tuple<string, float[]>>();
+                foreach (var doc in documents)
+                {
+                    var embedding = clientE.GenerateEmbedding(doc);
+                    documentEmbeddings.Add(Tuple.Create(doc, embedding.Value.Vector.ToArray()));
+                }
+                var userQuery = "Qual o modelo de linguagem desenvolvido pela OpenAI?";
+                var queryEmbedding = clientE.GenerateEmbedding(userQuery);
+
+                // Calcular similaridade entre a consulta e os documentos
+                var similarities = documentEmbeddings.Select(docEmbedding => new
+                {
+                    Document = docEmbedding.Item1,
+                    Similarity = CosineSimilarity(queryEmbedding.Value.Vector.ToArray(), docEmbedding.Item2)
+                });
+
+                // Encontrar os documentos mais relevantes
+                var topDocuments = similarities.OrderByDescending(sim => sim.Similarity).Take(3);
+
+                Console.WriteLine("Documentos mais relevantes:");
+                foreach (var doc in topDocuments)
+                {
+                    Console.WriteLine($"Documento: {doc.Document}, Similaridade: {doc.Similarity}");
+                }
+
+
+                // Embedding embedding = clientE.GenerateEmbedding(description);
+                //ReadOnlyMemory<float> vector = embedding.Vector;
+
+                //Console.WriteLine($"Dimension: {vector.Length}");
+                //Console.WriteLine($"Floats: ");
+                //for (int i = 0; i < vector.Length; i++)
+                //{
+                //    Console.WriteLine($"  [{i,4}] = {vector.Span[i]}");
+                //}
             }
             else if (capturado == "Chat-Generate-Images")
             {
@@ -399,6 +456,35 @@ namespace Ola
                         Console.Write(@$"{JsonConvert.SerializeObject(messages)}");
                 } while (requiresAction);
 
+            }
+            else if (capturado == "Chat-SimpleChatProtocol")
+            {
+
+                BinaryData input = BinaryData.FromString("""
+            {
+               "model": "gpt-4o",
+               "messages": [
+                   {
+                       "role": "user",
+                       "content": "How does AI work? Explain it in simple terms."
+                   }
+               ]
+            }
+            """);
+
+                using BinaryContent content = BinaryContent.Create(input);
+                ClientResult result = client.CompleteChat(content);
+                BinaryData output = result.GetRawResponse().Content;
+
+                using JsonDocument outputAsJson = JsonDocument.Parse(output.ToString());
+                string message = outputAsJson.RootElement
+                    .GetProperty("choices")[0]
+                    .GetProperty("message")
+                    .GetProperty("content")
+                    .GetString();
+
+                Console.WriteLine($"[ASSISTANT]:");
+                Console.WriteLine($"{message}");
             }
             #endregion
 
